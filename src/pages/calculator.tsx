@@ -9,10 +9,8 @@ import {
   TAX_CONSTANTS_FROM_2026,
   BASIC_INSURANCE_BASE,
 } from '@/lib/tax/constants';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import ThemeSwitcher from '@/components/ThemeSwitcher';
 
-export default function Home() {
+export default function Calculator() {
   const { t } = useTranslation('tax');
   const [salaryType, setSalaryType] = useState<'gross' | 'net'>('gross');
   const [salary, setSalary] = useState<string>('20000000');
@@ -38,34 +36,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-muted py-8 px-4">
       <div className="mx-auto max-w-7xl">
-        {/* Header with Language Switcher */}
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-foreground">
-            {t('page.title')}
-          </h1>
-          <div className="flex items-center gap-3">
-            <ThemeSwitcher />
-            <LanguageSwitcher />
-          </div>
-        </div>
-
-        {/* Privacy Note */}
-        <div className="mb-6 rounded-md bg-accent/50 p-3 text-center text-sm text-accent-foreground">
-          <svg
-            className="mr-2 inline-block h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-          {t('privacy.note')}
-        </div>
+        <h1 className="mb-8 text-center text-3xl font-bold text-foreground">
+          {t('page.title')}
+        </h1>
 
         {/* Input Form */}
         <div className="mb-8 rounded-lg bg-background p-6 shadow-md">

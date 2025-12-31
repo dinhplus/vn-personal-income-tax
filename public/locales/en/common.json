@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "Vietnamese Personal Income Tax Calculator",
+    "description": "Calculate your personal income tax in Vietnam"
+  },
+  "nav": {
+    "home": "Home",
+    "calculator": "Calculator",
+    "about": "About"
+  },
+  "footer": {
+    "copyright": "© 2025 VN Personal Income Tax. All rights reserved."
+  },
+  "language": {
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
+  "actions": {
+    "calculate": "Calculate",
+    "reset": "Reset",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  }
+}

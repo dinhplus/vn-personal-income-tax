@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "Tính Thuế Thu Nhập Cá Nhân Việt Nam",
+    "description": "Tính thuế thu nhập cá nhân của bạn tại Việt Nam"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "calculator": "Tính thuế",
+    "about": "Giới thiệu"
+  },
+  "footer": {
+    "copyright": "© 2025 Thuế Thu Nhập Cá Nhân VN. Đã đăng ký bản quyền."
+  },
+  "language": {
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
+  "actions": {
+    "calculate": "Tính toán",
+    "reset": "Đặt lại",
+    "submit": "Gửi",
+    "cancel": "Hủy"
+  }
+}

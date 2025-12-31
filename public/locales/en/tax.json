@@ -1,0 +1,62 @@
+{
+  "page": {
+    "title": "Personal Income Tax Calculator",
+    "inputTitle": "Input Information"
+  },
+  "form": {
+    "salaryType": {
+      "label": "Salary Type",
+      "gross": "Gross Salary",
+      "net": "Net Salary"
+    },
+    "amount": {
+      "label": "Amount (VND)",
+      "placeholder": "20000000"
+    },
+    "dependents": {
+      "label": "Number of Dependents",
+      "placeholder": "0"
+    },
+    "insurance": {
+      "label": "Insurance Base",
+      "basic": "Basic Rate",
+      "specific": "Specific Amount",
+      "percentage": "% of Gross Salary"
+    },
+    "insuranceValue": {
+      "labelPercentage": "Percentage (%)",
+      "labelAmount": "Amount (VND)",
+      "placeholderPercentage": "100",
+      "placeholderAmount": "5310000"
+    }
+  },
+  "results": {
+    "grossSalary": "Gross Salary",
+    "employeeInsurance": "Employee Insurance",
+    "taxableIncome": "Taxable Income",
+    "tax": "Personal Income Tax",
+    "netSalary": "Net Salary",
+    "employerCost": "Employer Cost",
+    "employerInsurance": "Employer Insurance",
+    "totalCost": "Total Cost",
+    "taxBreakdown": "Tax Breakdown"
+  },
+  "comparison": {
+    "title": "Comparison",
+    "netDifference": "Net Salary Difference",
+    "taxDifference": "Tax Difference",
+    "taxableIncomeDifference": "Taxable Income Difference"
+  },
+  "period": {
+    "before2026": "Before 2026",
+    "from2026": "From 2026"
+  },
+  "privacy": {
+    "note": "All data is calculated directly in your browser and is not collected by any server."
+  },
+  "language": {
+    "switchTo": "Switch to",
+    "vietnamese": "Tiếng Việt",
+    "english": "English"
+  }
+}

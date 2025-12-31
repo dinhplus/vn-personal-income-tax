@@ -1,0 +1,62 @@
+{
+  "page": {
+    "title": "Tính Thuế Thu Nhập Cá Nhân",
+    "inputTitle": "Thông Tin Đầu Vào"
+  },
+  "form": {
+    "salaryType": {
+      "label": "Loại Lương",
+      "gross": "Lương Gross",
+      "net": "Lương Net"
+    },
+    "amount": {
+      "label": "Số Tiền (VND) - Lương",
+      "placeholder": "20000000"
+    },
+    "dependents": {
+      "label": "Số Người Phụ Thuộc",
+      "placeholder": "0"
+    },
+    "insurance": {
+      "label": "Mức Đóng Bảo Hiểm",
+      "basic": "Mức Cơ Bản",
+      "specific": "Mức Cụ Thể",
+      "percentage": "% Lương Gross"
+    },
+    "insuranceValue": {
+      "labelPercentage": "Phần Trăm (%)",
+      "labelAmount": "Số Tiền (VND) - Mức BHXH",
+      "placeholderPercentage": "100",
+      "placeholderAmount": "5310000"
+    }
+  },
+  "results": {
+    "grossSalary": "Lương Gross",
+    "employeeInsurance": "Bảo Hiểm Người LĐ",
+    "taxableIncome": "Thu Nhập Chịu Thuế",
+    "tax": "Thuế TNCN",
+    "netSalary": "Lương Net",
+    "employerCost": "Chi Phí Người Sử Dụng Lao Động",
+    "employerInsurance": "Bảo Hiểm Người SDLĐ",
+    "totalCost": "Tổng Chi Phí",
+    "taxBreakdown": "Chi Tiết Thuế"
+  },
+  "comparison": {
+    "title": "So Sánh",
+    "netDifference": "Chênh Lệch Lương Net",
+    "taxDifference": "Chênh Lệch Thuế",
+    "taxableIncomeDifference": "Chênh Lệch Thu Nhập Chịu Thuế"
+  },
+  "period": {
+    "before2026": "Trước 2026",
+    "from2026": "Từ 2026"
+  },
+  "privacy": {
+    "note": "Dữ liệu chỉ được tính toán trực tiếp tại trình duyệt, không được thu thập bởi máy chủ."
+  },
+  "language": {
+    "switchTo": "Chuyển sang",
+    "vietnamese": "Tiếng Việt",
+    "english": "English"
+  }
+}
