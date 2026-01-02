@@ -1,39 +1,40 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetStaticProps } from 'next';
-import { calculateTax, formatVND, formatNumber } from '@/lib/tax/calculator';
-import { TaxInput, TaxCalculationResult } from '@/lib/tax/types';
-import {
-  TAX_CONSTANTS_BEFORE_2026,
-  TAX_CONSTANTS_FROM_2026,
-  BASIC_INSURANCE_BASE,
-} from '@/lib/tax/constants';
+import { formatVND, formatNumber } from '@/lib/tax/utils';
+import { BASIC_INSURANCE_BASE } from '@/lib/tax/constants';
+import { type InsuranceBaseConfig, type SalaryType, type TaxPayerCalculationResult, type TaxConstants } from '@/lib/tax';
+import { useTaxCalculation } from '@/hooks/useTaxCalculation';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 export default function Home() {
   const { t } = useTranslation('tax');
-  const [salaryType, setSalaryType] = useState<'gross' | 'net'>('gross');
+  const [salaryType, setSalaryType] = useState<SalaryType>('gross');
   const [salary, setSalary] = useState<string>('20000000');
   const [dependents, setDependents] = useState<string>('0');
   const [insuranceType, setInsuranceType] = useState<'basic' | 'specific' | 'percentage'>('basic');
   const [insuranceValue, setInsuranceValue] = useState<string>(BASIC_INSURANCE_BASE.toString());
 
-  const input: TaxInput = {
+  // Create insurance config
+  const insuranceConfig: InsuranceBaseConfig = useMemo(() => {
+    if (insuranceType === 'basic') {
+      return { type: 'basic', value: BASIC_INSURANCE_BASE };
+    } else if (insuranceType === 'specific') {
+      return { type: 'specific', value: parseFloat(insuranceValue) || 0 };
+    } else {
+      return { type: 'percentage', value: parseFloat(insuranceValue) || 0 };
+    }
+  }, [insuranceType, insuranceValue]);
+
+  // Use custom hook for tax calculation with OOP models
+  const { resultBefore2026, resultFrom2026, difference } = useTaxCalculation({
     salaryType,
     salary: parseFloat(salary) || 0,
     dependents: parseInt(dependents) || 0,
-    insuranceBase:
-      insuranceType === 'basic'
-        ? { type: 'basic', value: BASIC_INSURANCE_BASE }
-        : insuranceType === 'specific'
-        ? { type: 'specific', value: parseFloat(insuranceValue) || 0 }
-        : { type: 'percentage', value: parseFloat(insuranceValue) || 0 },
-  };
-
-  const resultBefore2026 = calculateTax(input, TAX_CONSTANTS_BEFORE_2026);
-  const resultFrom2026 = calculateTax(input, TAX_CONSTANTS_FROM_2026);
+    insuranceConfig,
+  });
 
   return (
     <div className="min-h-screen bg-muted py-8 px-4">
@@ -184,15 +185,15 @@ export default function Home() {
           <div className="grid gap-4 md:grid-cols-3">
             <ComparisonItem
               label={t('comparison.netDifference')}
-              value={resultFrom2026.netSalary - resultBefore2026.netSalary}
+              value={difference.netSalary}
             />
             <ComparisonItem
               label={t('comparison.taxDifference')}
-              value={resultFrom2026.totalTax - resultBefore2026.totalTax}
+              value={difference.totalTax}
             />
             <ComparisonItem
               label={t('comparison.taxableIncomeDifference')}
-              value={resultFrom2026.taxableIncome - resultBefore2026.taxableIncome}
+              value={difference.taxableIncome}
             />
           </div>
         </div>
@@ -201,7 +202,7 @@ export default function Home() {
   );
 }
 
-function ResultCard({ result }: { result: TaxCalculationResult }) {
+function ResultCard({ result }: { result: TaxPayerCalculationResult & { constants: TaxConstants } }) {
   const { t } = useTranslation('tax');
   
   return (
@@ -213,7 +214,7 @@ function ResultCard({ result }: { result: TaxCalculationResult }) {
       {/* Main Results */}
       <div className="space-y-3">
         <ResultRow label={t('results.grossSalary')} value={formatVND(result.grossSalary)} highlight />
-        <ResultRow label={t('results.employeeInsurance')} value={formatVND(result.insuranceContribution)} />
+        <ResultRow label={t('results.employeeInsurance')} value={formatVND(result.insurance.employeeContribution)} />
         <ResultRow label={t('results.taxableIncome')} value={formatVND(result.taxableIncome)} />
         <ResultRow label={t('results.tax')} value={formatVND(result.totalTax)} />
         <ResultRow label={t('results.netSalary')} value={formatVND(result.netSalary)} highlight />
@@ -223,7 +224,7 @@ function ResultCard({ result }: { result: TaxCalculationResult }) {
       <div className="mt-6 border-t border-border pt-4">
         <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('results.employerCost')}</h3>
         <ResultRow label={t('results.grossSalary')} value={formatVND(result.grossSalary)} />
-        <ResultRow label={t('results.employerInsurance')} value={formatVND(result.employerInsuranceContribution)} />
+        <ResultRow label={t('results.employerInsurance')} value={formatVND(result.insurance.employerContribution)} />
         <ResultRow label={t('results.totalCost')} value={formatVND(result.totalEmployerCost)} highlight />
       </div>
 
@@ -231,14 +232,17 @@ function ResultCard({ result }: { result: TaxCalculationResult }) {
       <div className="mt-6 border-t border-border pt-4">
         <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('results.taxBreakdown')}</h3>
         <div className="space-y-2">
-          {result.taxBreakdown.map((item, idx) => (
-            <div key={idx} className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {formatNumber(item.bracket.from)} - {item.bracket.to ? formatNumber(item.bracket.to) : '∞'} ({item.bracket.rate}%)
-              </span>
-              <span className="font-medium text-foreground">{formatVND(item.taxAmount)}</span>
-            </div>
-          ))}
+          {result.taxBreakdown.map((item, idx) => {
+            const bracket = item.bracket.toJSON();
+            return (
+              <div key={idx} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {formatNumber(bracket.from)} - {bracket.to ? formatNumber(bracket.to) : '∞'} ({bracket.rate}%)
+                </span>
+                <span className="font-medium text-foreground">{formatVND(item.taxAmount)}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
