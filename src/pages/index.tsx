@@ -1,13 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import { useDebounce } from '@/hooks/useDebounce';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetStaticProps } from 'next';
-import { formatVND, formatNumber } from '@/lib/tax/utils';
+import { formatVND } from '@/lib/tax/utils';
 import { BASIC_INSURANCE_BASE } from '@/lib/tax/constants';
-import { type InsuranceBaseConfig, type SalaryType, type TaxPayerCalculationResult, type TaxConstants } from '@/lib/tax';
+import { type InsuranceBaseConfig, type SalaryType } from '@/lib/tax';
 import { useTaxCalculation } from '@/hooks/useTaxCalculation';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import ResultCard from '@/components/ResultCard';
+import ComparisonItem from '@/components/ComparisonItem';
 
 export default function Home() {
   const { t } = useTranslation('tax');
@@ -17,22 +20,53 @@ export default function Home() {
   const [insuranceType, setInsuranceType] = useState<'basic' | 'specific' | 'percentage'>('basic');
   const [insuranceValue, setInsuranceValue] = useState<string>(BASIC_INSURANCE_BASE.toString());
 
-  // Create insurance config
-  const insuranceConfig: InsuranceBaseConfig = useMemo(() => {
-    if (insuranceType === 'basic') {
-      return { type: 'basic', value: BASIC_INSURANCE_BASE };
-    } else if (insuranceType === 'specific') {
-      return { type: 'specific', value: parseFloat(insuranceValue) || 0 };
-    } else {
-      return { type: 'percentage', value: parseFloat(insuranceValue) || 0 };
-    }
-  }, [insuranceType, insuranceValue]);
-
-  // Use custom hook for tax calculation with OOP models
-  const { resultBefore2026, resultFrom2026, difference } = useTaxCalculation({
+  // Confirmed values for calculation (after clicking Calculate button)
+  const [confirmedValues, setConfirmedValues] = useState({
     salaryType,
-    salary: parseFloat(salary) || 0,
-    dependents: parseInt(dependents) || 0,
+    salary,
+    dependents,
+    insuranceType,
+    insuranceValue,
+  });
+
+  // Debounced trigger for auto-calculation after 2s of inactivity
+  const triggerValue = useDebounce(
+    { salaryType, salary, dependents, insuranceType, insuranceValue },
+    2000
+  );
+
+  // Auto-update confirmed values after debounce
+  useEffect(() => {
+    setConfirmedValues(triggerValue);
+  }, [triggerValue]);
+
+  // Manual calculate handler
+  const handleCalculate = useCallback(() => {
+    setConfirmedValues({
+      salaryType,
+      salary,
+      dependents,
+      insuranceType,
+      insuranceValue,
+    });
+  }, [salaryType, salary, dependents, insuranceType, insuranceValue]);
+
+  // Create insurance config from confirmed values
+  const insuranceConfig: InsuranceBaseConfig = useMemo(() => {
+    if (confirmedValues.insuranceType === 'basic') {
+      return { type: 'basic', value: BASIC_INSURANCE_BASE };
+    } else if (confirmedValues.insuranceType === 'specific') {
+      return { type: 'specific', value: parseFloat(confirmedValues.insuranceValue) || 0 };
+    } else {
+      return { type: 'percentage', value: parseFloat(confirmedValues.insuranceValue) || 0 };
+    }
+  }, [confirmedValues.insuranceType, confirmedValues.insuranceValue]);
+
+  // Use custom hook for tax calculation with OOP models (using confirmed values)
+  const { resultBefore2026, resultFrom2026, difference } = useTaxCalculation({
+    salaryType: confirmedValues.salaryType,
+    salary: parseFloat(confirmedValues.salary) || 0,
+    dependents: parseInt(confirmedValues.dependents) || 0,
     insuranceConfig,
   });
 
@@ -171,6 +205,16 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Calculate Button */}
+          <div className="mt-6 flex justify-center w-full">
+            <button
+              onClick={handleCalculate}
+              className="w-full rounded-md bg-primary px-8 py-3 text-lg font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              {t('form.calculateButton', 'Tính toán')}
+            </button>
+          </div>
         </div>
 
         {/* Comparison Results */}
@@ -197,78 +241,6 @@ export default function Home() {
             />
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function ResultCard({ result }: { result: TaxPayerCalculationResult & { constants: TaxConstants } }) {
-  const { t } = useTranslation('tax');
-  
-  return (
-    <div className="rounded-lg bg-background p-6 shadow-md">
-      <h2 className="mb-4 border-b border-border pb-2 text-xl font-semibold text-primary">
-        {t(`period.${result.constants.year === 'Trước 2026' ? 'before2026' : 'from2026'}`)}
-      </h2>
-
-      {/* Main Results */}
-      <div className="space-y-3">
-        <ResultRow label={t('results.grossSalary')} value={formatVND(result.grossSalary)} highlight />
-        <ResultRow label={t('results.employeeInsurance')} value={formatVND(result.insurance.employeeContribution)} />
-        <ResultRow label={t('results.taxableIncome')} value={formatVND(result.taxableIncome)} />
-        <ResultRow label={t('results.tax')} value={formatVND(result.totalTax)} />
-        <ResultRow label={t('results.netSalary')} value={formatVND(result.netSalary)} highlight />
-      </div>
-
-      {/* Employer Cost */}
-      <div className="mt-6 border-t border-border pt-4">
-        <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('results.employerCost')}</h3>
-        <ResultRow label={t('results.grossSalary')} value={formatVND(result.grossSalary)} />
-        <ResultRow label={t('results.employerInsurance')} value={formatVND(result.insurance.employerContribution)} />
-        <ResultRow label={t('results.totalCost')} value={formatVND(result.totalEmployerCost)} highlight />
-      </div>
-
-      {/* Tax Breakdown */}
-      <div className="mt-6 border-t border-border pt-4">
-        <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('results.taxBreakdown')}</h3>
-        <div className="space-y-2">
-          {result.taxBreakdown.map((item, idx) => {
-            const bracket = item.bracket.toJSON();
-            return (
-              <div key={idx} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {formatNumber(bracket.from)} - {bracket.to ? formatNumber(bracket.to) : '∞'} ({bracket.rate}%)
-                </span>
-                <span className="font-medium text-foreground">{formatVND(item.taxAmount)}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ResultRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className={`flex justify-between ${highlight ? 'font-semibold' : ''}`}>
-      <span className={highlight ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
-      <span className={highlight ? 'text-primary' : 'text-foreground'}>{value}</span>
-    </div>
-  );
-}
-
-function ComparisonItem({ label, value }: { label: string; value: number }) {
-  const isPositive = value > 0;
-  const isZero = value === 0;
-  
-  return (
-    <div className="text-center">
-      <div className="text-sm text-accent-foreground">{label}</div>
-      <div className={`mt-1 text-lg font-bold ${
-        isZero ? 'text-accent-foreground' : isPositive ? 'text-success' : 'text-error'
-      }`}>
-        {isPositive && '+'}{formatVND(value)}
       </div>
     </div>
   );

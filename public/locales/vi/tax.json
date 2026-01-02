@@ -28,7 +28,8 @@
       "labelAmount": "Số Tiền (VND) - Mức BHXH",
       "placeholderPercentage": "100",
       "placeholderAmount": "5310000"
-    }
+    },
+    "calculateButton": "Tính Toán"
   },
   "results": {
     "grossSalary": "Lương Gross",

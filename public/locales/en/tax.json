@@ -28,7 +28,8 @@
       "labelAmount": "Amount (VND)",
       "placeholderPercentage": "100",
       "placeholderAmount": "5310000"
-    }
+    },
+    "calculateButton": "Calculate"
   },
   "results": {
     "grossSalary": "Gross Salary",
